@@ -108,9 +108,9 @@ build {
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install Xubuntu Desktop
+  # Install Lubuntu Desktop
   provisioner "shell" {
-    script          = "./xubuntu.sh"
+    script          = "./lubuntu.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 

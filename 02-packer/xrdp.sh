@@ -2,17 +2,17 @@
 set -euo pipefail
 
 # ================================================================================
-# XRDP Installation and XFCE Session Configuration Script
+# XRDP Installation and LXQt Session Configuration Script
 # ================================================================================
 # Description:
 #   Installs XRDP and replaces the default /etc/xrdp/startwm.sh script so that
-#   all XRDP logins launch XFCE without the untrusted launcher dialog or the
+#   all XRDP logins launch LXQt without the untrusted launcher dialog or the
 #   default Ubuntu session. The script also ensures the file has correct
 #   permissions and enables the XRDP service at boot.
 #
 # Notes:
 #   - Uses apt-get for predictable automation behavior.
-#   - Writes a clean startwm.sh that invokes startxfce4.
+#   - Writes a clean startwm.sh that invokes startlxqt.
 #   - Script exits on any error due to 'set -euo pipefail'.
 # ================================================================================
 
@@ -23,7 +23,7 @@ sudo apt-get update -y
 sudo apt-get install -y xrdp
 
 # ================================================================================
-# Step 2: Replace /etc/xrdp/startwm.sh with XFCE session launcher
+# Step 2: Replace /etc/xrdp/startwm.sh with LXQt session launcher
 # ================================================================================
 sudo tee /etc/xrdp/startwm.sh >/dev/null <<'EOF'
 #!/bin/sh
@@ -42,7 +42,7 @@ if test -r ~/.profile; then
     . ~/.profile
 fi
 
-startxfce4
+startlxqt
 EOF
 
 # ================================================================================

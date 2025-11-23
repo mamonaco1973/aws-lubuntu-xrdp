@@ -51,7 +51,7 @@ echo "NOTE: Deregistering project AMIs and deleting snapshots..."
 
 for ami_id in $(aws ec2 describe-images \
     --owners self \
-    --filters "Name=name,Values=xubuntu_ami*" \
+    --filters "Name=name,Values=lubuntu_ami*" \
     --query "Images[].ImageId" \
     --output text); do
 
