@@ -28,19 +28,19 @@ windows_dns=$(aws ec2 describe-instances \
 if [ -z "$windows_dns" ]; then
   echo "WARN: No Windows AD instance found with tag Name=windows-ad-admin"
 else
-  echo "NOTE: Windows Instance DNS: $(echo $windows_dns | xargs)"
+  echo "NOTE: Windows Instance FQDN: $(echo $windows_dns | xargs)"
 fi
 
 # --------------------------------------------------------------------------------------------------
 # Lookup Linux AD Instance
 # --------------------------------------------------------------------------------------------------
 linux_dns=$(aws ec2 describe-instances \
-  --filters "Name=tag:Name,Values=xubuntu-instance" \
+  --filters "Name=tag:Name,Values=lubuntu-instance" \
   --query 'Reservations[].Instances[].PublicDnsName' \
   --output text)
 
 if [ -z "$linux_dns" ]; then
-  echo "WARN: No Linux AD instance found with tag Name=xubuntu-instance"
+  echo "WARN: No Linux AD instance found with tag Name=lubuntu-instance"
 else
-  echo "NOTE: Xubuntu Desktop Instance DNS:   $(echo $linux_dns | xargs)"
+  echo "NOTE: Lubuntu Desktop Instance FQDN: $(echo $linux_dns | xargs)"
 fi

@@ -3,24 +3,25 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 # ==============================================================================
-# Minimal Lubuntu Desktop Installation Script (LXQt-Core Environment)
+# Lubuntu Desktop-Core Installation Script (Lightweight LXQt Environment)
 # ==============================================================================
 # Description:
-#   Installs a minimal LXQt desktop environment using lxqt-core, openbox,
-#   qterminal, and essential tools. Ensures /etc/skel includes a Desktop
-#   directory so new users inherit the folder automatically.
+#   Installs the Lubuntu Desktop-Core environment (LXQt, Openbox, LightDM,
+#   system configuration tools) without the heavy applications included in the
+#   full lubuntu-desktop package. Ensures /etc/skel includes a Desktop directory
+#   so new users inherit it automatically.
 #
 # Notes:
 #   - Uses apt-get for predictable automation behavior.
-#   - Installs only LXQt core components, not the full lubuntu-desktop bundle.
-#   - Script exits on any error due to 'set -euo pipefail'.
+#   - Does NOT install LibreOffice, Discover, or other large desktop apps.
+#   - Script exits immediately on any error due to 'set -euo pipefail'.
 # ==============================================================================
 
 # ==============================================================================
-# Step 1: Install minimal LXQt components and window manager
+# Step 1: Install Lubuntu Desktop-Core
 # ==============================================================================
 apt-get update -y
-apt-get install -y lxqt-core openbox pcmanfm-qt qterminal
+apt-get install -y lubuntu-desktop-core
 
 # ==============================================================================
 # Step 2: Install clipboard utilities
@@ -30,6 +31,7 @@ apt-get install -y xsel xclip copyq
 # ==============================================================================
 # Step 3: Configure qterminal as the default terminal emulator
 # ==============================================================================
+# lubuntu-desktop-core includes qterminal; enforce it as the default.
 update-alternatives --install \
   /usr/bin/x-terminal-emulator \
   x-terminal-emulator \
@@ -42,9 +44,9 @@ update-alternatives --install \
 mkdir -p /etc/skel/Desktop
 
 # ==============================================================================
-# Step 5: Skip wallpaper configuration for minimal LXQt
+# Step 5: No wallpaper or theme adjustments required
 # ==============================================================================
-# LXQt-Core does not install wallpapers or themes; nothing to validate here.
+# Lubuntu Desktop-Core installs LXQt defaults without heavy theming.
 # ==============================================================================
 
-echo "NOTE: Minimal LXQt desktop installation complete."
+echo "NOTE: Lubuntu Desktop-Core installation complete."
