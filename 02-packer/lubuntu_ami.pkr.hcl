@@ -70,12 +70,12 @@ variable "subnet_id" {
 # - Provisions software and configuration
 # - Creates a reusable AMI with a timestamp-based name
 # ------------------------------------------------------------------------------------------
-source "amazon-ebs" "xubuntu_ami" {
+source "amazon-ebs" "lubuntu_ami" {
   region        = var.region                       # AWS region
   instance_type = var.instance_type                # EC2 instance type
   source_ami    = data.amazon-ami.ubuntu_2404.id   # Base Ubuntu 24.04 AMI
   ssh_username  = "ubuntu"                         # Default SSH user for Ubuntu
-  ami_name      = "xubuntu_ami_${replace(timestamp(), ":", "-")}" # Timestamped AMI name
+  ami_name      = "lubuntu_ami_${replace(timestamp(), ":", "-")}" # Timestamped AMI name
   ssh_interface = "public_ip"                      # Use public IP for provisioning
   vpc_id        = var.vpc_id                       # Target VPC
   subnet_id     = var.subnet_id                    # Target Subnet (must allow outbound internet)
@@ -100,7 +100,7 @@ source "amazon-ebs" "xubuntu_ami" {
 # - Each script installs a specific set of software or config
 # ------------------------------------------------------------------------------------------
 build {
-  sources = ["source.amazon-ebs.xubuntu_ami"]
+  sources = ["source.amazon-ebs.lubuntu_ami"]
 
   # Install base packages and dependencies
   provisioner "shell" {

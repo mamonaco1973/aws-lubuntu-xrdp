@@ -15,7 +15,7 @@ export DEBIAN_FRONTEND=noninteractive
 #
 # Notes:
 #   - Installs only essential LXQt components (Lubuntu "feel" without the bloat).
-#   - Completely removes snapd and related directories.
+#   - Snap is removed earlier in the build; no snap-removal steps included here.
 #   - Script exits immediately on any error due to 'set -euo pipefail'.
 # ==============================================================================
 
@@ -59,15 +59,7 @@ apt-get install -y lightdm lightdm-gtk-greeter
 apt-get install -y xsel xclip copyq
 
 # ==============================================================================
-# Step 6: Remove Snap components
-# ==============================================================================
-systemctl stop snapd.service snapd.socket snapd.seeded.service || true
-apt-get purge -y snapd || true
-rm -rf /snap /var/snap /var/lib/snapd /var/cache/snapd
-apt-get autoremove -y
-
-# ==============================================================================
-# Step 7: Configure qterminal as the default terminal emulator
+# Step 6: Configure qterminal as the default terminal emulator
 # ==============================================================================
 update-alternatives --install \
   /usr/bin/x-terminal-emulator \
@@ -76,14 +68,14 @@ update-alternatives --install \
   50
 
 # ==============================================================================
-# Step 8: Ensure new users receive a Desktop directory
+# Step 7: Ensure new users receive a Desktop directory
 # ==============================================================================
 mkdir -p /etc/skel/Desktop
 
 # ==============================================================================
-# Step 9: No wallpaper or theme adjustments required
+# Step 8: No wallpaper or theme adjustments required
 # ==============================================================================
-# LXQt uses its own lightweight theme defaults; no actions required here.
+# LXQt uses its own lightweight theme defaults; no actions required.
 # ==============================================================================
 
 echo "NOTE: Lubuntu Cloud Edition installation complete."
