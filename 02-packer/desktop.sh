@@ -104,7 +104,7 @@ EOF
 
 sudo tee /etc/xdg/pcmanfm-qt/lxqt/settings.conf >/dev/null <<'EOF'
 [Desktop]
-DesktopShortcuts=Home, Trash, Computer
+DesktopShortcuts=Home
 Wallpaper=/usr/share/lxqt/themes/debian/wallpaper.svg
 WallpaperMode=zoom
 WallpaperRandomize=false
