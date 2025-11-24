@@ -78,4 +78,5 @@ mkdir -p /etc/skel/Desktop
 # LXQt uses its own lightweight theme defaults; no actions required.
 # ==============================================================================
 
+sudo apt remove -y gvfs gvfs-backends gvfs-fuse
 echo "NOTE: Lubuntu Cloud Edition installation complete."
