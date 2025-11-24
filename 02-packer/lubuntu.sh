@@ -3,35 +3,72 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 # ==============================================================================
-# Lubuntu Desktop-Core Installation Script (Lightweight LXQt Environment)
+# Lubuntu Cloud Edition Installation Script (Minimal LXQt Desktop)
 # ==============================================================================
 # Description:
-#   Installs the Lubuntu Desktop-Core environment (LXQt, Openbox, LightDM,
-#   system configuration tools) without the heavy applications included in the
-#   full lubuntu-desktop package. Ensures /etc/skel includes a Desktop directory
-#   so new users inherit it automatically.
+#   Installs a lightweight LXQt desktop environment suitable for cloud VMs and
+#   XRDP sessions. Includes LightDM, LXQt panels, Openbox, configuration tools,
+#   power management, notifications, qterminal, and PCManFM-Qt. Excludes heavy
+#   Lubuntu applications such as LibreOffice, Discover, Thunderbird, Snap, and
+#   multimedia apps. Ensures /etc/skel includes a Desktop directory for new
+#   user profiles.
 #
 # Notes:
-#   - Uses apt-get for predictable automation behavior.
-#   - Does NOT install LibreOffice, Discover, or other large desktop apps.
+#   - Installs only essential LXQt components (Lubuntu "feel" without the bloat).
+#   - Completely removes snapd and related directories.
 #   - Script exits immediately on any error due to 'set -euo pipefail'.
 # ==============================================================================
 
 # ==============================================================================
-# Step 1: Install Lubuntu Desktop-Core
+# Step 1: Update package index
 # ==============================================================================
 apt-get update -y
-apt-get install -y lubuntu-desktop-core
 
 # ==============================================================================
-# Step 2: Install clipboard utilities
+# Step 2: Install core LXQt desktop components
+# ==============================================================================
+apt-get install -y \
+  lxqt \
+  lxqt-core \
+  lxqt-config \
+  lxqt-panel \
+  lxqt-session \
+  lxqt-policykit \
+  lxqt-sudo \
+  lxqt-powermanagement \
+  lxqt-runner \
+  lxqt-notificationd
+
+# ==============================================================================
+# Step 3: Install window manager, terminal, file manager
+# ==============================================================================
+apt-get install -y \
+  openbox \
+  obconf-qt \
+  pcmanfm-qt \
+  qterminal
+
+# ==============================================================================
+# Step 4: Install LightDM display manager (thin, XRDP-friendly)
+# ==============================================================================
+apt-get install -y lightdm lightdm-gtk-greeter
+
+# ==============================================================================
+# Step 5: Install clipboard utilities
 # ==============================================================================
 apt-get install -y xsel xclip copyq
 
 # ==============================================================================
-# Step 3: Configure qterminal as the default terminal emulator
+# Step 6: Remove Snap components
 # ==============================================================================
-# lubuntu-desktop-core includes qterminal; enforce it as the default.
+systemctl stop snapd.service snapd.socket snapd.seeded.service || true
+apt-get purge -y snapd || true
+rm -rf /snap /var/snap /var/lib/snapd /var/cache/snapd
+apt-get autoremove -y
+
+# ==============================================================================
+# Step 7: Configure qterminal as the default terminal emulator
+# ==============================================================================
 update-alternatives --install \
   /usr/bin/x-terminal-emulator \
   x-terminal-emulator \
@@ -39,14 +76,14 @@ update-alternatives --install \
   50
 
 # ==============================================================================
-# Step 4: Ensure new users receive a Desktop directory
+# Step 8: Ensure new users receive a Desktop directory
 # ==============================================================================
 mkdir -p /etc/skel/Desktop
 
 # ==============================================================================
-# Step 5: No wallpaper or theme adjustments required
+# Step 9: No wallpaper or theme adjustments required
 # ==============================================================================
-# Lubuntu Desktop-Core installs LXQt defaults without heavy theming.
+# LXQt uses its own lightweight theme defaults; no actions required here.
 # ==============================================================================
 
-echo "NOTE: Lubuntu Desktop-Core installation complete."
+echo "NOTE: Lubuntu Cloud Edition installation complete."
