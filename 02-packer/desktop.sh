@@ -7,10 +7,10 @@ set -euo pipefail
 # Description:
 #   Creates trusted symlinks for selected applications inside /etc/skel/Desktop.
 #   These symlinks ensure that all newly created users receive desktop icons
-#   without the XFCE "untrusted application launcher" warning dialog.
+#   without the XFCE/LXQT "untrusted application launcher" warning dialog.
 #
 # Notes:
-#   - Works for XFCE, MATE, and most desktop environments using .desktop files.
+#   - Works for XFCE, MATE, LXQT and most desktop environments using .desktop files.
 #   - Only affects *new* users created after this script runs.
 #   - Symlinks are used instead of copied launchers to preserve trust flags.
 # ================================================================================
@@ -51,37 +51,77 @@ done
 
 echo "NOTE: All new users will receive these desktop icons without trust prompts."
 
-# ================================================================================================
-# XFCE Screensaver Default (NEW USERS ONLY)
-# -----------------------------------------------------------------------------------------------
-# - Writes xfce4-screensaver.xml into /etc/skel so only NEW accounts inherit it.
-# - Does NOT modify any existing user home directories.
-# - Sets idle timeout (delay) to 60 minutes.
-# ================================================================================================
+# ================================================================================
+# Step 3: Lubuntu configurations for XRDP
+# ================================================================================
 
-SKEL_DIR="/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml"
-SKEL_FILE="${SKEL_DIR}/xfce4-screensaver.xml"
+sudo mkdir -p /etc/xdg/lxqt
 
-# Create the skeleton config directory
-sudo mkdir -p "${SKEL_DIR}"
+# Specify default applications and window manager
 
-# Create the 60-minute default screensaver config
-sudo tee "${SKEL_FILE}" >/dev/null <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-
-<channel name="xfce4-screensaver" version="1.0">
-  <property name="saver" type="empty">
-    <property name="mode" type="int" value="2"/>
-    <property name="idle-activation" type="empty">
-      <property name="delay" type="int" value="60"/>
-    </property>
-    <property name="themes" type="empty">
-      <property name="list" type="array">
-        <value type="string" value="screensavers-xfce-floaters"/>
-      </property>
-    </property>
-  </property>
-</channel>
+sudo tee /etc/xdg/lxqt/session.conf >/dev/null <<'EOF'
+[Environment]
+BROWSER=firefox
+TERM=qterminal
+[General]
+window_manager=openbox
 EOF
 
-echo "NOTE: Default XFCE screensaver timeout set to 60 minutes for NEW users."
+# Configure LXQt panel with essential plugins and quicklaunchers
+# Turned off problematic plugins for XRDP sessions
+
+sudo tee /etc/xdg/lxqt/panel.conf >/dev/null <<'EOF'
+[General]
+iconTheme=Papirus-Dark
+
+[kbindicator]
+alignment=Right
+type=kbindicator
+
+[quicklaunch]
+alignment=Left
+apps\1\desktop=/usr/share/applications/pcmanfm-qt.desktop
+apps\2\desktop=/usr/share/applications/qterminal.desktop
+apps\3\desktop=/usr/share/applications/featherpad.desktop
+apps\size=3
+type=quicklaunch
+
+[quicklaunch2]
+alignment=left
+apps\1\desktop=/usr/share/applications/lxqt-leave.desktop
+apps\size=1
+type=quicklaunch
+
+[panel1]
+plugins=mainmenu, showdesktop, desktopswitch, quicklaunch, taskbar, tray, statusnotifier, worldclock, quicklaunch2
+
+[taskbar]
+buttonWidth=200
+raiseOnCurrentDesktop=true
+EOF
+
+# Configure PCManFM-Qt to show Desktop shortcuts and set default wallpaper
+
+sudo tee /etc/xdg/pcmanfm-qt/lxqt/settings.conf >/dev/null <<'EOF'
+[Desktop]
+DesktopShortcuts=Home, Trash, Computer
+Wallpaper=/usr/share/lxqt/themes/debian/wallpaper.svg
+WallpaperMode=zoom
+WallpaperRandomize=false
+
+[System]
+Archiver=xarchiver
+FallbackIconThemeName=oxygen
+Terminal=qterminal
+
+[Window]
+AlwaysShowTabs=true
+
+[Behavior]
+QuickExec=true
+EOF
+
+# Remove powermanagement to prevent conflicts with XRDP sessions
+
+sudo apt-get purge -y lxqt-powermanagement
+sudo apt-get autoremove -y
