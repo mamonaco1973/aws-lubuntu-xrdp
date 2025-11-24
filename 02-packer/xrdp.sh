@@ -42,7 +42,15 @@ if test -r ~/.profile; then
     . ~/.profile
 fi
 
-startlxqt
+# -------------------------------------------------------------------------------
+# Force LXQt desktop environment for all XRDP sessions
+# -------------------------------------------------------------------------------
+export DESKTOP_SESSION=lxqt
+export XDG_SESSION_DESKTOP=lxqt
+export XDG_CURRENT_DESKTOP=lxqt
+
+exec startlxqt
+
 EOF
 
 # ================================================================================

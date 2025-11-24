@@ -70,7 +70,20 @@ update-alternatives --install \
 # ==============================================================================
 # Step 7: Ensure new users receive a Desktop directory
 # ==============================================================================
+
 mkdir -p /etc/skel/Desktop
+sudo mkdir -p /etc/xdg/lxqt
+sudo tee /etc/xdg/lxqt/session.conf >/dev/null <<'EOF'
+[Session]
+window_manager=openbox
+EOF
+sudo mkdir -p /etc/skel/.config/lxqt
+
+sudo tee /etc/skel/.config/lxqt/session.conf >/dev/null <<'EOF'
+[Session]
+window_manager=openbox
+EOF
+
 
 # ==============================================================================
 # Step 8: No wallpaper or theme adjustments required
