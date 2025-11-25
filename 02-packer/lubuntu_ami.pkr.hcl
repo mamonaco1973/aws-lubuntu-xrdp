@@ -89,7 +89,7 @@ source "amazon-ebs" "lubuntu_ami" {
   }
 
   tags = {
-    Name = "xubuntu_ami_${replace(timestamp(), ":", "-")}" # Tag AMI with unique name
+    Name = "lubuntu_ami_${replace(timestamp(), ":", "-")}" # Tag AMI with unique name
   }
 }
 
