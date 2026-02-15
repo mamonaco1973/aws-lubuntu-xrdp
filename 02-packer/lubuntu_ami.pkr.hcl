@@ -1,209 +1,200 @@
-# ==========================================================================================
-# Packer Build: Xubuntu AMI on Ubuntu 24.04 (Noble)
-# ------------------------------------------------------------------------------------------
-# Purpose:
-#   - Uses Packer to build a custom Amazon Machine Image (AMI) for Xubuntu XRDP
-#   - Starts from the official Canonical Ubuntu 24.04 AMI
-#   - Installs prerequisites (SSM agent, AWS CLI, packages, Xubuntu Server)
-#   - Produces a tagged, timestamped AMI for later use in Terraform or EC2 launches
-# ==========================================================================================
+# ==============================================================================
+# Packer Build: Lubuntu AMI on Ubuntu 24.04 (Noble)
+# ------------------------------------------------------------------------------
+# Builds a custom Lubuntu XRDP AMI for AWS.
+# Base image: Canonical Ubuntu 24.04 (Noble).
+# Output: Timestamped AMI for Terraform or EC2 launches.
+# ==============================================================================
 
 
-# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Packer Plugin Configuration
-# - Defines the Amazon plugin required to interact with AWS
-# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Defines required Amazon plugin for AWS builds.
+# ------------------------------------------------------------------------------
 packer {
   required_plugins {
     amazon = {
-      source  = "github.com/hashicorp/amazon" # Official HashiCorp Amazon plugin
-      version = "~> 1"                        # Any compatible version within major version 1
+      source  = "github.com/hashicorp/amazon"
+      version = "~> 1"
     }
   }
 }
 
 
-# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Data Source: Base Ubuntu 24.04 AMI
-# - Fetches the latest Canonical-owned AMI for Ubuntu Noble (24.04)
-# - Filters to use HVM virtualization and EBS-backed storage
-# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Retrieves latest Canonical-owned Ubuntu Noble AMI.
+# ------------------------------------------------------------------------------
 data "amazon-ami" "ubuntu_2404" {
   filters = {
-    name                = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
+    name                =
+      "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
     virtualization-type = "hvm"
     root-device-type    = "ebs"
   }
 
   most_recent = true
-  owners      = ["099720109477"] # Canonical’s AWS account ID
+  owners      = ["099720109477"]
 }
 
 
-# ------------------------------------------------------------------------------------------
-# Variables: Build-Time Inputs
-# - Control region, instance type, networking, and subnet placement
-# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Variables: Build Inputs
+# ------------------------------------------------------------------------------
+# Control region, instance type, and network placement.
+# ------------------------------------------------------------------------------
 variable "region" {
-  default = "us-east-1" # Default AWS region
+  default = "us-east-1"
 }
 
 variable "instance_type" {
-  default = "m5.2xlarge"  # Use a slightly larger instance so packer builds 
-                          # will run quicker.
+  default = "m5.2xlarge"
 }
 
 variable "vpc_id" {
-  description = "The ID of the VPC to use" # Supplied by user or pipeline
+  description = "VPC ID for build instance."
   default     = ""
 }
 
 variable "subnet_id" {
-  description = "The ID of the subnet to use" # Supplied by user or pipeline
+  description = "Subnet ID for build instance."
   default     = ""
 }
 
 
-# ------------------------------------------------------------------------------------------
-# Amazon-EBS Source Block
-# - Launches a temporary EC2 instance from the base Ubuntu AMI
-# - Provisions software and configuration
-# - Creates a reusable AMI with a timestamp-based name
-# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Amazon EBS Source
+# ------------------------------------------------------------------------------
+# Launches temporary EC2 instance and produces reusable AMI.
+# ------------------------------------------------------------------------------
 source "amazon-ebs" "lubuntu_ami" {
-  region        = var.region                       # AWS region
-  instance_type = var.instance_type                # EC2 instance type
-  source_ami    = data.amazon-ami.ubuntu_2404.id   # Base Ubuntu 24.04 AMI
-  ssh_username  = "ubuntu"                         # Default SSH user for Ubuntu
-  ami_name      = "lubuntu_ami_${replace(timestamp(), ":", "-")}" # Timestamped AMI name
-  ssh_interface = "public_ip"                      # Use public IP for provisioning
-  vpc_id        = var.vpc_id                       # Target VPC
-  subnet_id     = var.subnet_id                    # Target Subnet (must allow outbound internet)
 
-  # Root EBS Volume Configuration
+  region        = var.region
+  instance_type = var.instance_type
+  source_ami    = data.amazon-ami.ubuntu_2404.id
+  ssh_username  = "ubuntu"
+
+  ami_name =
+    "lubuntu_ami_${replace(timestamp(), ":", "-")}"
+
+  ssh_interface = "public_ip"
+  vpc_id        = var.vpc_id
+  subnet_id     = var.subnet_id
+
+  # ---------------------------------------------------------------------------
+  # Root Volume
+  # ---------------------------------------------------------------------------
   launch_block_device_mappings {
-    device_name           = "/dev/sda1" # Root device
-    volume_size           = "64"        # Root volume size in GiB
-    volume_type           = "gp3"       # gp3: cost-effective SSD
-    delete_on_termination = "true"      # Cleanup volume when instance terminates
+    device_name           = "/dev/sda1"
+    volume_size           = "64"
+    volume_type           = "gp3"
+    delete_on_termination = "true"
   }
 
   tags = {
-    Name = "lubuntu_ami_${replace(timestamp(), ":", "-")}" # Tag AMI with unique name
+    Name =
+      "lubuntu_ami_${replace(timestamp(), ":", "-")}"
   }
 }
 
 
-# ------------------------------------------------------------------------------------------
-# Build Block: Provisioning Scripts
-# - Executes setup scripts inside the temporary EC2 instance
-# - Each script installs a specific set of software or config
-# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Build Block
+# ------------------------------------------------------------------------------
+# Executes provisioning scripts inside temporary instance.
+# ------------------------------------------------------------------------------
 build {
   sources = ["source.amazon-ebs.lubuntu_ami"]
 
-  # Install base packages and dependencies
+  # Install base packages.
   provisioner "shell" {
     script          = "./packages.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install Lubuntu Desktop
+  # Install Lubuntu desktop.
   provisioner "shell" {
     script          = "./lubuntu.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install XRDP - RDP over X
+  # Install XRDP.
   provisioner "shell" {
     script          = "./xrdp.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
   # Install Google Chrome.
-
   provisioner "shell" {
     script          = "./chrome.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install Firefox
-
+  # Install Firefox.
   provisioner "shell" {
     script          = "./firefox.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install VS Code
-
+  # Install VS Code.
   provisioner "shell" {
     script          = "./vscode.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install HashiCorp Tools
-
+  # Install HashiCorp tools.
   provisioner "shell" {
     script          = "./hashicorp.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install AWS CLI
-
+  # Install AWS CLI.
   provisioner "shell" {
     script          = "./awscli.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-
-  # Install AZ CLI
-
+  # Install Azure CLI.
   provisioner "shell" {
     script          = "./azcli.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install gcloud CLI
-
+  # Install Google Cloud CLI.
   provisioner "shell" {
     script          = "./gcloudcli.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install docker
-
+  # Install Docker.
   provisioner "shell" {
     script          = "./docker.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install postman
-
+  # Install Postman.
   provisioner "shell" {
     script          = "./postman.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install krdc - RDP client
-
+  # Install KRDC.
   provisioner "shell" {
     script          = "./krdc.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  
-  # Install OnlyOffice
-
+  # Install OnlyOffice.
   provisioner "shell" {
     script          = "./onlyoffice.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
 
-  # Install Desktop icons
-
+  # Configure desktop icons.
   provisioner "shell" {
     script          = "./desktop.sh"
     execute_command = "sudo -E bash '{{.Path}}'"
   }
-
 }
