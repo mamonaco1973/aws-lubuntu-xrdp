@@ -75,8 +75,7 @@ source "amazon-ebs" "lubuntu_ami" {
   source_ami    = data.amazon-ami.ubuntu_2404.id
   ssh_username  = "ubuntu"
 
-  ami_name =
-    "lubuntu_ami_${replace(timestamp(), ":", "-")}"
+  ami_name = "lubuntu_ami_${replace(timestamp(), ":", "-")}"
 
   ssh_interface = "public_ip"
   vpc_id        = var.vpc_id
