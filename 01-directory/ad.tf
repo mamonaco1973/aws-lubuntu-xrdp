@@ -28,6 +28,7 @@ module "mini_ad" {
 
   depends_on = [
     aws_nat_gateway.ad_nat,
+    aws_route.private_default,
     aws_route_table_association.rt_assoc_ad_private
   ]
 }

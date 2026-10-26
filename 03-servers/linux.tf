@@ -32,7 +32,7 @@ data "aws_ami" "latest_desktop_ami" {
 # ==============================================================================
 # EC2 Instance: Lubuntu Desktop
 # ------------------------------------------------------------------------------
-# Provisions an Ubuntu 24.04 desktop instance.
+# Provisions an Ubuntu 26.04 desktop instance.
 # Integrates with Active Directory and mounts Amazon EFS.
 # ==============================================================================
 

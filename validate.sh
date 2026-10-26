@@ -5,17 +5,19 @@
 #
 # Purpose:
 #   Validate the deployment by locating key instance endpoints and
-#   printing a clean, aligned summary for quick copy/paste access.
+#   printing a clean, aligned summary for quick copy/paste access,
+#   including a domain login to sign in with.
 #
 # What This Script Does:
 #   - Queries EC2 for instances by Name tag.
 #   - Extracts Public DNS names (for RDP / SSH / XRDP access paths).
+#   - Reads jsmith's AD password from Secrets Manager.
 #
 # Requirements:
 #   - AWS CLI installed and configured with appropriate permissions.
 #   - Instances must be tagged:
-#       * Name = windows-ad-admin
-#       * Name = mate-instance
+#       * Name = lubuntu-ad-admin
+#       * Name = lubuntu-instance
 #
 # Output:
 #   - Prints a short banner and aligned key/value lines.
@@ -55,7 +57,12 @@ print_kv() {
 # ================================================================================
 
 windows_dns="$(get_public_dns_by_name_tag "lubuntu-ad-admin")"
-mate_dns="$(get_public_dns_by_name_tag "lubuntu-instance")"
+desktop_dns="$(get_public_dns_by_name_tag "lubuntu-instance")"
+
+# jsmith is in mcloud-users and linux-admins (sudo on the desktop).
+jsmith_password="$(aws secretsmanager get-secret-value \
+  --secret-id jsmith_ad_credentials_lubuntu \
+  --query SecretString --output text 2>/dev/null | jq -r .password || true)"
 
 # ================================================================================
 # SECTION: Output
@@ -72,11 +79,21 @@ else
   print_kv "Windows AD Admin Host" "${windows_dns}"
 fi
 
-if [ -z "${mate_dns}" ]; then
+if [ -z "${desktop_dns}" ]; then
   print_kv "Lubuntu Desktop Host" "NOT FOUND (Name=lubuntu-instance)"
 else
-  print_kv "Lubuntu Desktop Host" "${mate_dns}"
+  print_kv "Lubuntu Desktop Host" "${desktop_dns}"
 fi
+
+echo
+if [ -z "${jsmith_password}" ]; then
+  print_kv "Sign in" "NOT FOUND (secret jsmith_ad_credentials_lubuntu)"
+else
+  print_kv "Sign in" "jsmith / ${jsmith_password}"
+fi
+printf "%-28s %s\n" "" "Desktop: jsmith. Windows: MCLOUD\\jsmith."
+printf "%-28s %s\n" "" "Other users: <user>_ad_credentials_lubuntu"
+printf "%-28s %s\n" "" "in Secrets Manager."
 
 echo
 echo "==============================================================================="

@@ -1,8 +1,8 @@
 # ==============================================================================
-# Packer Build: Lubuntu AMI on Ubuntu 24.04 (Noble)
+# Packer Build: Lubuntu AMI on Ubuntu 26.04 (Resolute)
 # ------------------------------------------------------------------------------
 # Builds a custom Lubuntu XRDP AMI for AWS.
-# Base image: Canonical Ubuntu 24.04 (Noble).
+# Base image: Canonical Ubuntu 26.04 (Resolute).
 # Output: Timestamped AMI for Terraform or EC2 launches.
 # ==============================================================================
 
@@ -23,13 +23,13 @@ packer {
 
 
 # ------------------------------------------------------------------------------
-# Data Source: Base Ubuntu 24.04 AMI
+# Data Source: Base Ubuntu 26.04 AMI
 # ------------------------------------------------------------------------------
 # Retrieves latest Canonical-owned Ubuntu Noble AMI.
 # ------------------------------------------------------------------------------
-data "amazon-ami" "ubuntu_2404" {
+data "amazon-ami" "ubuntu_2604" {
   filters = {
-    name  = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
+    name  = "ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-*"
     virtualization-type = "hvm"
     root-device-type    = "ebs"
   }
@@ -72,7 +72,7 @@ source "amazon-ebs" "lubuntu_ami" {
 
   region        = var.region
   instance_type = var.instance_type
-  source_ami    = data.amazon-ami.ubuntu_2404.id
+  source_ami    = data.amazon-ami.ubuntu_2604.id
   ssh_username  = "ubuntu"
 
   ami_name = "lubuntu_ami_${replace(timestamp(), ":", "-")}"
