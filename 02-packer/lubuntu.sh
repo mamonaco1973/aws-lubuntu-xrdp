@@ -7,15 +7,11 @@ export DEBIAN_FRONTEND=noninteractive
 # ==============================================================================
 # Description:
 #   Installs a lightweight LXQt desktop environment suitable for cloud VMs and
-#   XRDP sessions. Includes LightDM, LXQt panels, Openbox, configuration tools,
-#   power management, notifications, qterminal, and PCManFM-Qt. Excludes heavy
-#   Lubuntu applications such as LibreOffice, Discover, Thunderbird, Snap, and
-#   multimedia apps. Ensures /etc/skel includes a Desktop directory for new
-#   user profiles.
+#   XRDP sessions: LXQt core components, Openbox, qterminal, PCManFM-Qt and
+#   FeatherPad. Excludes the full Lubuntu application set (office suite, mail,
+#   media apps) and any display manager, since XRDP starts its own X sessions.
 #
 # Notes:
-#   - Installs only essential LXQt components (Lubuntu "feel" without the bloat).
-#   - Snap is removed earlier in the build; no snap-removal steps included here.
 #   - Script exits immediately on any error due to 'set -euo pipefail'.
 # ==============================================================================
 
@@ -27,31 +23,37 @@ apt-get update -y
 # ==============================================================================
 # Step 2: Install core LXQt desktop components
 # ==============================================================================
+# lxqt-core no longer pulls in lxqt-menu-data on 26.04 (LXQt 2.3); without it
+# the panel has no application menu at all.
 apt-get install -y \
-  lxqt \
   lxqt-core \
   lxqt-config \
   lxqt-panel \
   lxqt-session \
   lxqt-policykit \
   lxqt-sudo \
-  lxqt-powermanagement \
   lxqt-runner \
-  lxqt-notificationd
+  lxqt-notificationd \
+  lxqt-menu-data
 
 # ==============================================================================
-# Step 3: Install window manager, terminal, file manager
+# Step 3: Install window manager, terminal, file manager, editor
 # ==============================================================================
 apt-get install -y \
   openbox \
   obconf-qt \
   pcmanfm-qt \
-  qterminal
+  qterminal \
+  featherpad
 
 # ==============================================================================
-# Step 4: Install LightDM display manager (thin, XRDP-friendly)
+# Step 4: Install xdg-open / xdg-mime
 # ==============================================================================
-apt-get install -y lightdm lightdm-gtk-greeter
+# How apps hand a link or file to "the default app". Neither package comes
+# with lxqt-core, and without both, opening any link fails. Under
+# XDG_CURRENT_DESKTOP=LXQt, xdg-utils delegates to qtxdg-mat (qtxdg-tools),
+# so xdg-utils alone is not enough.
+apt-get install -y xdg-utils qtxdg-tools
 
 # ==============================================================================
 # Step 5: Install clipboard utilities
@@ -70,26 +72,31 @@ update-alternatives --install \
 # ==============================================================================
 # Step 7: Ensure new users receive a Desktop directory
 # ==============================================================================
-
+# The LXQt session defaults (/etc/xdg/lxqt/session.conf) are written by
+# desktop.sh.
 mkdir -p /etc/skel/Desktop
-sudo mkdir -p /etc/xdg/lxqt
-sudo tee /etc/xdg/lxqt/session.conf >/dev/null <<'EOF'
-[Session]
-window_manager=openbox
-EOF
-sudo mkdir -p /etc/skel/.config/lxqt
-
-sudo tee /etc/skel/.config/lxqt/session.conf >/dev/null <<'EOF'
-[Session]
-window_manager=openbox
-EOF
-
 
 # ==============================================================================
-# Step 8: No wallpaper or theme adjustments required
+# Step 8: Remove what a headless cloud desktop never uses
 # ==============================================================================
-# LXQt uses its own lightweight theme defaults; no actions required.
-# ==============================================================================
+# Several of these pop up authentication prompts or errors inside an XRDP
+# session. gvfs's mount daemons hang PCManFM-Qt in remote sessions.
+apt-get purge -y \
+  bluez blueman cups cups-browsed cups-daemon system-config-printer \
+  modemmanager speech-dispatcher orca \
+  lxqt-powermanagement xscreensaver update-notifier \
+  gvfs gvfs-backends gvfs-fuse \
+  2>/dev/null || true
+apt-get autoremove -y
 
-sudo apt remove -y gvfs gvfs-backends gvfs-fuse
+# ==============================================================================
+# Step 9: No display manager on the console
+# ==============================================================================
+# XRDP starts its own X sessions; a console login manager only competes for
+# resources.
+for dm in lightdm sddm; do
+  systemctl disable "$dm" 2>/dev/null || true
+done
+systemctl set-default multi-user.target
+
 echo "NOTE: Lubuntu Cloud Edition installation complete."

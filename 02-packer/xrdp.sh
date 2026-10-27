@@ -50,7 +50,7 @@ fi
 # -------------------------------------------------------------------------------
 export DESKTOP_SESSION=lxqt
 export XDG_SESSION_DESKTOP=lxqt
-export XDG_CURRENT_DESKTOP=lxqt
+export XDG_CURRENT_DESKTOP=LXQt
 
 # XRDP starts Xorg with "-auth .Xauthority" but does not export XAUTHORITY.
 # Ordinary apps find ~/.Xauthority by default; snaps run with a redirected
@@ -76,22 +76,13 @@ sudo systemctl enable xrdp
 echo "NOTE: XRDP installation and configuration complete."
 
 # ---------------------------------------------------------------------------------
-# Deploy PAM script to create home directories on first xrdp login
+# PAM: environment, then the system stack (SSSD + mkhomedir)
 # ---------------------------------------------------------------------------------
+# Home directories come from pam_mkhomedir in common-session, enabled at boot
+# by userdata.sh (pam-auth-update --enable mkhomedir; HOME_MODE 0700).
 
-cat <<'EOF' | tee /etc/pam.d/xrdp-mkhomedir.sh > /dev/null
-#!/bin/bash
-echo "NOTE: Creating home directory for user $PAM_USER" 
-su -c "exit" $PAM_USER
-chmod 700 /home/*
-EOF
-
-chmod +x /etc/pam.d/xrdp-mkhomedir.sh
-
-# Create /etc/pam.d/xrdp-sesman with required PAM configuration
 cat >/etc/pam.d/xrdp-sesman <<'EOF'
 #%PAM-1.0
-auth optional pam_exec.so debug /etc/pam.d/xrdp-mkhomedir.sh
 auth required pam_env.so readenv=1
 auth required pam_env.so readenv=1 envfile=/etc/default/locale
 @include common-auth

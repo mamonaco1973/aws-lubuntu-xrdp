@@ -49,6 +49,14 @@ Regenerate with `python3 make_diagram.py`.
   with "Authorization required".
 - **No polkit prompts in RDP sessions.** A polkit rule allows colour-profile
   and package-refresh actions that otherwise ask for a password at login.
+- **LXQt 2.3 fixes for 26.04.** The panel uses the `fancymenu` plugin
+  (`mainmenu` no longer loads) with `lxqt-menu-data`, and the `dark` theme,
+  because the `debian` theme draws the menu button blank. `xdg-utils` and
+  `qtxdg-tools` with `XDG_CURRENT_DESKTOP=LXQt` let apps open links and
+  files, and `/etc/xdg/mimeapps.list` makes Firefox the default browser.
+- **Nothing a cloud desktop doesn't use.** gvfs (which hangs PCManFM-Qt in
+  remote sessions), printing, Bluetooth, ModemManager and power management
+  are removed, and no display manager runs on the console.
 - **New users get the desktop icons and defaults** from `/etc/skel`.
 
 ## How sign-in works
